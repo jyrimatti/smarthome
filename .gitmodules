@@ -1,0 +1,11 @@
+[submodule "spot"]
+	path = spot
+	url = git@github.com:jyrimatti/spot.git
+[submodule "stiebel"]
+	path = stiebel
+	url = git@github.com:jyrimatti/stiebel.git
+[submodule "skoda"]
+	path = skoda
+	url = git@github.com:jyrimatti/skoda.git
+
+

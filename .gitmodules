@@ -7,8 +7,8 @@
 [submodule "skoda"]
 	path = skoda
 	url = git@github.com:jyrimatti/skoda.git
-[submodule "swegon"]
-	path = swegon
-	url = git@github.com:jyrimatti/swegon.git
+[submodule "ouman"]
+	path = ouman
+	url = git@github.com:jyrimatti/ouman.git
 
 

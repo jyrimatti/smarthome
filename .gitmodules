@@ -1,3 +1,6 @@
+[submodule "modbus.sh"]
+	path = modbus.sh
+	url = git@github.com:jyrimatti/modbus.sh.git
 [submodule "spot"]
 	path = spot
 	url = git@github.com:jyrimatti/spot.git

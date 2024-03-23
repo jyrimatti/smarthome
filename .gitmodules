@@ -27,3 +27,6 @@
 [submodule "huawei"]
 	path = huawei
 	url = git@github.com:jyrimatti/huawei.git
+[submodule "ping"]
+	path = ping
+	url = git@github.com:jyrimatti/ping.git

@@ -75,7 +75,7 @@
     </template>
 
     <div id="graphLoader" hx-boost="true">
-      <div hx-db="http:/spot/spot.db">
+      <div hx-db="http://spot.lahteenmaki.net/spot.db">
         <input type="hidden"
                hx-sql="SELECT name AS graph FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
                hx-trigger="change"

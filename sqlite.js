@@ -222,7 +222,7 @@ And include in your HTML:
                             var result = [];
                             sqliteWasmHttp.createSQLiteThread(isHttp ? { http: httpBackend } : {})
                                 .then(db => { db('open', {
-                                    filename: encodeURI(dbURI.replace(/^http:/, 'file:')),
+                                    filename: encodeURI(dbURI.startsWith('http://') ? dbURI : dbURI.replace(/^http:/, 'file:')),
                                     vfs: isHttp ? 'http' : 'opfs'
                                 }); return db; } )
                                 .then(db => db('exec', {

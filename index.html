@@ -117,6 +117,13 @@
                hx-target="closest div"
                mustache-array-template="graph" />
       </div>
+      <div hx-db="http:/homewizard/homewizard.db">
+        <input type="hidden"
+               hx-sql="SELECT name AS graph FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%' AND name = upper(name)"
+               hx-trigger="change"
+               hx-target="closest div"
+               mustache-array-template="graph" />
+      </div>
     </div>
 
     <header>

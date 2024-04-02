@@ -1,0 +1,148 @@
+<html>
+  <head>
+    <title>Smarthome graphs</title>
+
+    <meta property="og:charset" content="UTF-8"/>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-title" content="Smarthome graphs"/>
+    <meta name="application-name" content="Smarthome graphs"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    
+    <script crossorigin src="https://cdn.amcharts.com/lib/version/5.8.7/index.js"></script>
+    <script crossorigin src="https://cdn.amcharts.com/lib/version/5.8.7/xy.js"></script>
+    <script crossorigin src="https://cdn.amcharts.com/lib/version/5.8.7/themes/Animated.js"></script>
+    <script crossorigin src="https://unpkg.com/htmx.org@1.9.11"></script>
+    <script crossorigin src="https://unpkg.com/htmx.org@1.9.11/dist/ext/client-side-templates.js"></script>
+    <script crossorigin src="https://unpkg.com/@popperjs/core@2"></script>
+    <script crossorigin src="https://unpkg.com/tippy.js@6"></script>
+    <script crossorigin src="https://unpkg.com/mustache@latest"></script>
+    <script src="web/dist/sqlite-wasm-http-main.js"></script>
+    <script src="sqlite.js"></script>
+    <script src="chart.js"></script>
+    <script src="ui.js"></script>
+
+    <link crossorigin rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body hx-ext="client-side-templates,sqlite">
+    <script>
+      import('https://cdn.skypack.dev/date-fns@2.30.0').then(dateFns => {
+        import('https://cdn.skypack.dev/date-fns-tz@2.0.0').then(dateFnsTz => {
+          import('https://cdn.skypack.dev/duration-fns@3.0.2').then(durationFns => {
+            initQuery(dateFns, document.getElementById('query'));
+            initTooltips(document);
+
+            window.adjustInterval = ([start,end]) => {
+              document.getElementsByName('start').forEach(input => input.value = dateFns.format(durationFns.apply(new Date(), durationFns.parse(start)), "yyyy-MM-dd'T'hh:mm"));
+              document.getElementsByName('end').forEach(input   => input.value = dateFns.format(durationFns.apply(new Date(), durationFns.parse(end)), "yyyy-MM-dd'T'hh:mm"));
+              document.getElementsByName('start').forEach(x => htmx.trigger(x, 'change'));
+              document.getElementsByName('end').forEach(x => htmx.trigger(x, 'change'));
+            };
+
+            adjustInterval(['-P1M', 'PT0S']);
+
+            window.init = initChart(dateFns, dateFnsTz);
+
+            htmx.findAll('#graphLoader [mustache-array-template]').forEach(x => htmx.trigger(x, 'change'));
+          });
+        });
+      });
+    </script>
+
+    <template id="graph">
+      {{#data}}
+      <input type="hidden"
+             hx-sql="SELECT * FROM {{graph}} WHERE instant BETWEEN strftime('%s', $start) AND strftime('%s', $end) ORDER BY instant DESC"
+             hx-boost="true"
+             hx-trigger="load,change from:.bind"
+             hx-include="[name='start'],[name='end']"
+             hx-on:htmx:before-on-load="let group = htmx.closest(this, '[hx-db]').getAttribute('hx-db').replace(/.*\/(.*).db/, '$1'); init(group + ': {{graph}}',
+                                             '{{graph}}'.startsWith('RELAT') ? 'R' :
+                                             '{{graph}}'.endsWith('W') ? 'P' :
+                                             '{{graph}}'.endsWith('_PRESSURE') ? 'b' :
+                                             '{{graph}}'.endsWith('_bytes') ? 'B' :
+                                             '{{graph}}'.endsWith('_bandwidth') ? 'W' :
+                                             '{{graph}}'.indexOf('_latency_') > -1 || '{{graph}}'.endsWith('_elapsed') || '{{graph}}'.indexOf('ping') > -1 || group == 'ping' ? 'M' :
+                                             '{{graph}}'.endsWith('WH') || '{{graph}}'.endsWith('_HEAT') || '{{graph}}'.indexOf('POWER') > -1  ? 'E' :
+                                             '{{graph}}'.endsWith('MODE') || '{{graph}}'.endsWith('OFF') || '{{graph}}'.endsWith('STATUS') || '{{graph}}'.endsWith('RESET') ? 'F' :
+                                             '{{graph}}'.toUpperCase().indexOf('TEMPERATURE') > -1 || '{{graph}}'.indexOf('_TEMP_') > -1 || '{{graph}}'.endsWith('Temp') ? 'T' :
+                                             '{{graph}}' == 'spot' ? 'C' :
+                                             '?',
+                                             event.detail.xhr.response.map(x => ({instant: x.instant*1000, measurement: (x.measurement || x.centsPerKWh)})))" />
+      {{/data}}
+    </template>
+
+    <div id="graphLoader" hx-boost="true">
+      <div hx-db="http:/spot/spot.db">
+        <input type="hidden"
+               hx-sql="SELECT name AS graph FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
+               hx-trigger="change"
+               hx-target="closest div"
+               mustache-array-template="graph" />
+      </div>
+      <div hx-db="http:/speed/speed.db">
+        <input type="hidden"
+               hx-sql="SELECT name AS graph FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
+               hx-trigger="change"
+               hx-target="closest div"
+               mustache-array-template="graph" />
+      </div>
+      <div hx-db="http:/ping/ping.db">
+        <input type="hidden"
+               hx-sql="SELECT name AS graph FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
+               hx-trigger="change"
+               hx-target="closest div"
+               mustache-array-template="graph" />
+      </div>
+      <div hx-db="http:/ouman/ouman.db">
+        <input type="hidden"
+               hx-sql="SELECT name AS graph FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
+               hx-trigger="change"
+               hx-target="closest div"
+               mustache-array-template="graph" />
+      </div>
+      <div hx-db="http:/stiebel/stiebel.db">
+        <input type="hidden"
+               hx-sql="SELECT name AS graph FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%' AND name = upper(name)"
+               hx-trigger="change"
+               hx-target="closest div"
+               mustache-array-template="graph" />
+      </div>
+      <div hx-db="http:/huawei/huawei.db">
+        <input type="hidden"
+               hx-sql="SELECT name AS graph FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%' AND name = upper(name)"
+               hx-trigger="change"
+               hx-target="closest div"
+               mustache-array-template="graph" />
+      </div>
+    </div>
+
+    <header>
+      <select id="template" hx-on:change="window.adjustInterval(this.value.split('/'))">
+        <option value="-P1M/PT0S">Past month</option>
+        <option value="-P3M/PT0S">Past 3 months</option>
+        <option value="-P6M/PT0S">Past 6 months</option>
+        <option value="-P1Y/PT0S">Past year</option>
+        <option value="-P99Y/P99Y">All time</option>
+      </select>
+
+      <input class="bind" type="datetime-local" name="start" />
+      <input class="bind" type="datetime-local" name="end" />
+
+      <input id="query"
+             value="SELECT * FROM outside_temp WHERE instant BETWEEN strftime('%s', $start) AND strftime('%s', $end) ORDER BY instant DESC"
+             placeholder="your query here..."
+             hx-sql=""
+             hx-boost="true"
+             hx-trigger="change"
+             hx-include="[name='start'],[name='end']"
+             hx-on:htmx:before-on-load="init('outside_temp', 'T', event.detail.xhr.response.map(x => x.instant ? {...x, instant: x.instant*1000} : x))" />
+    </header>
+    <section class="container">
+      <div id="chart"></div>
+    </section>
+  </body>
+</html>
+

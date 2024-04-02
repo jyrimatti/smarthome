@@ -1,0 +1,72 @@
+body {
+    margin: 0;
+    padding-top: 10px;
+    overflow: hidden;
+}
+header {
+    display: flex;
+    white-space: nowrap;
+    font-variant: small-caps;
+}
+header > * {
+    text-decoration: none;
+    margin: 0 0.5em;
+}
+input {
+    height: 22px;
+    width: 20em;
+}
+input#query {
+    width: 100%;
+}
+.container {
+    height: 80vh;
+    height: calc(99dvh - 32px);
+}
+.current {
+    border: 1px dotted cadetblue;
+    padding: 0.2em;
+    max-width: 10em;
+    margin-left: 2em;
+    margin-top: -3px;
+    border-radius: 0.4em;
+    background: skyblue;
+}
+.current .unit {
+    font-variant: all-small-caps;
+    font-size: 0.75em;
+}
+.github img {
+    width: 1.25em;
+    height: 1.25em;
+}
+select {
+    width: 8em;
+}
+
+
+#table {
+    display: none;
+    overflow: scroll;
+    height: 100%;
+}
+table {
+    border-spacing: 2em 0.2em;
+    margin: 1em;
+}
+th {
+    text-align: left;
+    border-bottom: 1px solid black;
+}
+#table:target {
+    display: block;
+}
+#table:target + #chart {
+    display: none;
+}
+
+.mode {
+    position: absolute;
+    left: 8px;
+    top: 10px;
+}

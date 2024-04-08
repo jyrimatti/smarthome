@@ -33,3 +33,6 @@
 [submodule "speed"]
 	path = speed
 	url = git@github.com:jyrimatti/speed.git
+[submodule "beny"]
+	path = beny
+	url = git@github.com:jyrimatti/beny.git

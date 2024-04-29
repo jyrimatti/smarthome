@@ -1,1 +1,10 @@
-{}
+{
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "sqlite-wasm-http": "^1.2.0"
+  }
+}

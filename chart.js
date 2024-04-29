@@ -30,8 +30,9 @@ let mkChart = root =>
 let mkYAxis = (root, chart, unit) => {
   let yAxis = chart.yAxes.push(
     am5xy.ValueAxis.new(root, {
-      autoZoom:        false,
-      renderer:        am5xy.AxisRendererY.new(root, {
+      autoZoom:          false,
+      visible:           false,
+      renderer:          am5xy.AxisRendererY.new(root, {
         minGridDistance: 20,
         opposite:        true
       }),
@@ -263,7 +264,11 @@ let initChart = (dateFns, dateFnsTz) => {
   let yAxisBytes = mkYAxis(root, chart, 'B');
   let yAxisPressure = mkYAxis(root, chart, 'bar');
   let yAxisBandwidth = mkYAxis(root, chart, 'b/s');
-  let yAxisTime = mkYAxis(root, chart, 'ms');
+  let yAxisTime = mkYAxis(root, chart, 's');
+  let yAxisVoltage = mkYAxis(root, chart, 'V');
+  let yAxisCurrent = mkYAxis(root, chart, 'A');
+  let yAxisPPM = mkYAxis(root, chart, 'ppm');
+  let yAxisLPM = mkYAxis(root, chart, 'l/min');
   let xAxis = mkXAxis(root, chart);
 
   let mkSeriesTemp = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisTemp);
@@ -276,6 +281,10 @@ let initChart = (dateFns, dateFnsTz) => {
   let mkSeriesPressure = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisPressure);
   let mkSeriesBandwidth = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisBandwidth);
   let mkSeriesTime = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisTime);
+  let mkSeriesVoltage = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisVoltage);
+  let mkSeriesCurrent = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisCurrent);
+  let mkSeriesPPM = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisPPM);
+  let mkSeriesLPM = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisLPM);
 
   let legend = mkLegend(root, chart);
   legend.data.setAll([]);
@@ -298,6 +307,10 @@ let initChart = (dateFns, dateFnsTz) => {
 
   return (seriesName, type, data) => {
     var series = chart.series.values.find(x => x.get('name') === seriesName);
+    if (type === undefined) {
+      return !series.isHidden();
+    }
+
     if (!series) {
         series = type === 'T' ? mkSeriesTemp(seriesName) :
                  type === 'R' ? mkSeriesRelative(seriesName) :
@@ -309,6 +322,10 @@ let initChart = (dateFns, dateFnsTz) => {
                  type === 'b' ? mkSeriesPressure(seriesName) :
                  type === 'W' ? mkSeriesBandwidth(seriesName) :
                  type === 'M' ? mkSeriesTime(seriesName) :
+                 type === 'V' ? mkSeriesVoltage(seriesName) :
+                 type === 'A' ? mkSeriesCurrent(seriesName) :
+                 type === 'p' ? mkSeriesPPM(seriesName) :
+                 type === 'l' ? mkSeriesLPM(seriesName) :
                  mkSeriesTemp(seriesName);
         if (type === '?') {
           console.log("Unknown type for " + seriesName);
@@ -318,8 +335,14 @@ let initChart = (dateFns, dateFnsTz) => {
         legend.data.setAll(all);
         series.hide();
         initSeries(dateFns, xAxis, series);
+
+        series.on('visible', visible => {
+          document.getElementById(seriesName).dispatchEvent(new CustomEvent('change'));
+        });
     }
-    initData(series)(data);
+    if (data) {
+      initData(series)(data);
+    }
     return false;
   };
 };

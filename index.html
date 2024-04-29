@@ -31,7 +31,7 @@
       import('https://cdn.skypack.dev/date-fns@2.30.0').then(dateFns => {
         import('https://cdn.skypack.dev/date-fns-tz@2.0.0').then(dateFnsTz => {
           import('https://cdn.skypack.dev/duration-fns@3.0.2').then(durationFns => {
-            initQuery(dateFns, document.getElementById('query'));
+            //initQuery(dateFns, document.getElementById('query'));
             initTooltips(document);
 
             window.adjustInterval = ([start,end]) => {
@@ -39,6 +39,13 @@
               document.getElementsByName('end').forEach(input   => input.value = dateFns.format(durationFns.apply(new Date(), durationFns.parse(end)), "yyyy-MM-dd'T'hh:mm"));
               document.getElementsByName('start').forEach(x => htmx.trigger(x, 'change'));
               document.getElementsByName('end').forEach(x => htmx.trigger(x, 'change'));
+            };
+
+            window.adjustVariant = variant => {
+              htmx.findAll('#graphLoader input').forEach(x => {
+                x.setAttribute('hx-sql', x.getAttribute('hx-sql' + variant));
+                x.dispatchEvent(new Event('change'));
+              });
             };
 
             adjustInterval(['-P1M', 'PT0S']);
@@ -54,72 +61,97 @@
     <template id="graph">
       {{#data}}
       <input type="hidden"
-             hx-sql="SELECT * FROM {{graph}} WHERE instant BETWEEN strftime('%s', $start) AND strftime('%s', $end) ORDER BY instant DESC"
+             hx-sql=            "SELECT instant,     {{column}}  measurement FROM {{graph}} WHERE instant BETWEEN strftime('%s', $start) AND strftime('%s', $end)                                                     ORDER BY instant DESC"
+             hx-sql-raw=        "SELECT instant,     {{column}}  measurement FROM {{graph}} WHERE instant BETWEEN strftime('%s', $start) AND strftime('%s', $end)                                                     ORDER BY instant DESC"
+             hx-sql-daily-avg=  "SELECT instant, AVG({{column}}) measurement FROM {{graph}} WHERE instant BETWEEN strftime('%s', $start) AND strftime('%s', $end) GROUP BY strftime('%Y-%m-%d', instant, 'unixepoch') ORDER BY instant DESC"
+             hx-sql-daily-min=  "SELECT instant, MIN({{column}}) measurement FROM {{graph}} WHERE instant BETWEEN strftime('%s', $start) AND strftime('%s', $end) GROUP BY strftime('%Y-%m-%d', instant, 'unixepoch') ORDER BY instant DESC"
+             hx-sql-daily-max=  "SELECT instant, MAX({{column}}) measurement FROM {{graph}} WHERE instant BETWEEN strftime('%s', $start) AND strftime('%s', $end) GROUP BY strftime('%Y-%m-%d', instant, 'unixepoch') ORDER BY instant DESC"
+             hx-sql-weekly-avg= "SELECT instant, AVG({{column}}) measurement FROM {{graph}} WHERE instant BETWEEN strftime('%s', $start) AND strftime('%s', $end) GROUP BY strftime('%Y-%W',    instant, 'unixepoch') ORDER BY instant DESC"
+             hx-sql-weekly-min= "SELECT instant, MIN({{column}}) measurement FROM {{graph}} WHERE instant BETWEEN strftime('%s', $start) AND strftime('%s', $end) GROUP BY strftime('%Y-%W',    instant, 'unixepoch') ORDER BY instant DESC"
+             hx-sql-weekly-max= "SELECT instant, MAX({{column}}) measurement FROM {{graph}} WHERE instant BETWEEN strftime('%s', $start) AND strftime('%s', $end) GROUP BY strftime('%Y-%W',    instant, 'unixepoch') ORDER BY instant DESC"
+             hx-sql-monthly-avg="SELECT instant, AVG({{column}}) measurement FROM {{graph}} WHERE instant BETWEEN strftime('%s', $start) AND strftime('%s', $end) GROUP BY strftime('%Y-%m',    instant, 'unixepoch') ORDER BY instant DESC"
+             hx-sql-monthly-min="SELECT instant, MIN({{column}}) measurement FROM {{graph}} WHERE instant BETWEEN strftime('%s', $start) AND strftime('%s', $end) GROUP BY strftime('%Y-%m',    instant, 'unixepoch') ORDER BY instant DESC"
+             hx-sql-monthly-max="SELECT instant, MAX({{column}}) measurement FROM {{graph}} WHERE instant BETWEEN strftime('%s', $start) AND strftime('%s', $end) GROUP BY strftime('%Y-%m',    instant, 'unixepoch') ORDER BY instant DESC"
+             
              hx-boost="true"
-             hx-trigger="load,change from:.bind"
+             hx-trigger="change[init(this.id)], change[init(this.id)] from:.bind"
              hx-include="[name='start'],[name='end']"
-             hx-on:htmx:before-on-load="let group = htmx.closest(this, '[hx-db]').getAttribute('hx-db').replace(/.*\/(.*).db/, '$1'); init(group + ': {{graph}}',
-                                             '{{graph}}'.startsWith('RELAT') ? 'R' :
-                                             '{{graph}}'.endsWith('W') ? 'P' :
-                                             '{{graph}}'.endsWith('_PRESSURE') ? 'b' :
-                                             '{{graph}}'.endsWith('_bytes') ? 'B' :
-                                             '{{graph}}'.endsWith('_bandwidth') ? 'W' :
-                                             '{{graph}}'.indexOf('_latency_') > -1 || '{{graph}}'.endsWith('_elapsed') || '{{graph}}'.indexOf('ping') > -1 || group == 'ping' ? 'M' :
-                                             '{{graph}}'.endsWith('WH') || '{{graph}}'.endsWith('_HEAT') || '{{graph}}'.indexOf('POWER') > -1  ? 'E' :
-                                             '{{graph}}'.endsWith('MODE') || '{{graph}}'.endsWith('OFF') || '{{graph}}'.endsWith('STATUS') || '{{graph}}'.endsWith('RESET') ? 'F' :
-                                             '{{graph}}'.toUpperCase().indexOf('TEMPERATURE') > -1 || '{{graph}}'.indexOf('_TEMP_') > -1 || '{{graph}}'.endsWith('Temp') ? 'T' :
-                                             '{{graph}}' == 'spot' ? 'C' :
-                                             '?',
-                                             event.detail.xhr.response.map(x => ({instant: x.instant*1000, measurement: (x.measurement || x.centsPerKWh)})))" />
+             hx-on:htmx:load="let group = htmx.closest(this, '[hx-db]').getAttribute('hx-db').replace(/.*\/(.*).db/, '$1');
+                              this.id = group + ': {{graph}}';
+                              init(group + ': {{graph}}',
+                                   '{{graph}}'.startsWith('RELAT') || '{{graph}}' == 'wifi_strength' || '{{graph}}' == 'ah' || '{{graph}}'.endsWith('Fan') ? 'R' :
+                                   '{{graph}}'.endsWith('_W') || '{{graph}}'.endsWith('_w') || '{{graph}}'.indexOf('POWER') > -1 ? 'P' :
+                                   '{{graph}}'.endsWith('_PRESSURE') ? 'b' :
+                                   '{{graph}}'.endsWith('_bytes') ? 'B' :
+                                   '{{graph}}'.endsWith('_v') ? 'V' :
+                                   '{{graph}}' == 'co2' ? 'p' :
+                                   '{{graph}}' == 'FLOW_RATE' ? 'l' :
+                                   '{{graph}}'.endsWith('_a') ? 'A' :
+                                   '{{graph}}'.endsWith('_bandwidth') ? 'W' :
+                                   '{{graph}}'.indexOf('_latency_') > -1 || '{{graph}}'.endsWith('_elapsed') || '{{graph}}'.indexOf('ping') > -1 || group == 'ping' ? 'M' :
+                                   '{{graph}}'.endsWith('WH') || '{{graph}}'.endsWith('kwh') || '{{graph}}'.endsWith('_HEAT') || '{{graph}}'.endsWith('_YIELD') ? 'E' :
+                                   '{{graph}}'.endsWith('MODE') || '{{graph}}'.endsWith('OFF') || '{{graph}}'.endsWith('STATUS') || '{{graph}}'.endsWith('RESET') ? 'F' :
+                                   '{{graph}}'.toUpperCase().indexOf('TEMPERATURE') > -1 || '{{graph}}'.indexOf('_TEMP_') > -1 || '{{graph}}'.endsWith('Temp') ? 'T' :
+                                   '{{graph}}' == 'spot' ? 'C' :
+                                   '?')"
+             hx-on:htmx:before-on-load="
+              let multiplier = this.id.endsWith('_kwh')       ? 1000 :
+                               this.id.endsWith('_bandwidth') ? 8 :
+                               this.id.indexOf('_latency_') > -1 || this.id.endsWith('_elapsed') || this.id.indexOf('ping') > -1 || this.id.startsWith('ping:') ? 0.001
+                                                              : 1;
+              init(this.id,
+                   '?', 
+                   event.detail.xhr.response.map(x => ({instant: x.instant*1000, measurement: multiplier * (x.measurement || x.centsPerKWh)})));
+              " />
       {{/data}}
     </template>
 
     <div id="graphLoader" hx-boost="true">
-      <div hx-db="http://spot.lahteenmaki.net/spot.db">
+      <div hx-db="http:/spot/spot.db">
         <input type="hidden"
-               hx-sql="SELECT name AS graph FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
+               hx-sql="SELECT name AS graph, 'centsPerKWh' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
                hx-trigger="change"
                hx-target="closest div"
                mustache-array-template="graph" />
       </div>
       <div hx-db="http:/speed/speed.db">
         <input type="hidden"
-               hx-sql="SELECT name AS graph FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
+               hx-sql="SELECT name AS graph, 'measurement' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
                hx-trigger="change"
                hx-target="closest div"
                mustache-array-template="graph" />
       </div>
       <div hx-db="http:/ping/ping.db">
         <input type="hidden"
-               hx-sql="SELECT name AS graph FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
+               hx-sql="SELECT name AS graph, 'measurement' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
                hx-trigger="change"
                hx-target="closest div"
                mustache-array-template="graph" />
       </div>
       <div hx-db="http:/ouman/ouman.db">
         <input type="hidden"
-               hx-sql="SELECT name AS graph FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
+               hx-sql="SELECT name AS graph, 'measurement' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
                hx-trigger="change"
                hx-target="closest div"
                mustache-array-template="graph" />
       </div>
       <div hx-db="http:/stiebel/stiebel.db">
         <input type="hidden"
-               hx-sql="SELECT name AS graph FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%' AND name = upper(name)"
+               hx-sql="SELECT name AS graph, 'measurement' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%' AND name = upper(name) AND name NOT IN ('HEATING_CURVE_RISE_HC1', 'HEATING_CURVE_RISE_HC2', 'RESTART_ISG', 'VD_HEATING', 'VD_COOLING', 'NHZ_1', 'NHZ_2', 'NHZ_1_2', 'SG_READY_OPERATING_STATE', 'BUS_STATUS')"
                hx-trigger="change"
                hx-target="closest div"
                mustache-array-template="graph" />
       </div>
       <div hx-db="http:/huawei/huawei.db">
         <input type="hidden"
-               hx-sql="SELECT name AS graph FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
+               hx-sql="SELECT name AS graph, 'measurement' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
                hx-trigger="change"
                hx-target="closest div"
                mustache-array-template="graph" />
       </div>
       <div hx-db="http:/homewizard/homewizard.db">
         <input type="hidden"
-               hx-sql="SELECT name AS graph FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
+               hx-sql="SELECT name AS graph, 'measurement' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
                hx-trigger="change"
                hx-target="closest div"
                mustache-array-template="graph" />
@@ -127,6 +159,18 @@
     </div>
 
     <header>
+      <select id="variant" hx-on:change="window.adjustVariant(this.value)">
+        <option value="-raw">raw values</option>
+        <option value="-daily-avg">daily AVG</option>
+        <option value="-daily-min">daily MIN</option>
+        <option value="-daily-max">daily MAX</option>
+        <option value="-weekly-avg">weekly AVG</option>
+        <option value="-weekly-min">weekly MIN</option>
+        <option value="-weekly-max">weekly MAX</option>
+        <option value="-monthly-avg">monthly AVG</option>
+        <option value="-monthly-min">monthly MIN</option>
+        <option value="-monthly-max">monthly MAX</option>
+      </select>
       <select id="template" hx-on:change="window.adjustInterval(this.value.split('/'))">
         <option value="-P1M/PT0S">Past month</option>
         <option value="-P3M/PT0S">Past 3 months</option>
@@ -138,7 +182,7 @@
       <input class="bind" type="datetime-local" name="start" />
       <input class="bind" type="datetime-local" name="end" />
 
-      <input id="query"
+      <!--<input id="query"
              value="SELECT * FROM outside_temp WHERE instant BETWEEN strftime('%s', $start) AND strftime('%s', $end) ORDER BY instant DESC"
              placeholder="your query here..."
              hx-sql=""
@@ -146,6 +190,7 @@
              hx-trigger="change"
              hx-include="[name='start'],[name='end']"
              hx-on:htmx:before-on-load="init('outside_temp', 'T', event.detail.xhr.response.map(x => x.instant ? {...x, instant: x.instant*1000} : x))" />
+      -->
     </header>
     <section class="container">
       <div id="chart"></div>

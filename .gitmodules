@@ -36,3 +36,9 @@
 [submodule "beny"]
 	path = beny
 	url = git@github.com:jyrimatti/beny.git
+[submodule "diskstore"]
+	path = diskstore
+	url = git@github.com:jyrimatti/diskstore.git
+[submodule "automower"]
+	path = automower
+	url = git@github.com:jyrimatti/automower.git

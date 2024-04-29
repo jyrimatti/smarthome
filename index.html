@@ -80,7 +80,7 @@
                               this.id = group + ': {{graph}}';
                               init(group + ': {{graph}}',
                                    '{{graph}}'.startsWith('RELAT') || '{{graph}}' == 'wifi_strength' || '{{graph}}' == 'ah' || '{{graph}}'.endsWith('Fan') ? 'R' :
-                                   '{{graph}}'.endsWith('_W') || '{{graph}}'.endsWith('_w') || '{{graph}}'.indexOf('POWER') > -1 ? 'P' :
+                                   '{{graph}}'.endsWith('_W') || '{{graph}}'.endsWith('_w') || '{{graph}}' == 'TOTAL_ACTIVE_POWER' ? 'P' :
                                    '{{graph}}'.endsWith('_PRESSURE') ? 'b' :
                                    '{{graph}}'.endsWith('_bytes') ? 'B' :
                                    '{{graph}}'.endsWith('_v') ? 'V' :
@@ -88,8 +88,8 @@
                                    '{{graph}}' == 'FLOW_RATE' ? 'l' :
                                    '{{graph}}'.endsWith('_a') ? 'A' :
                                    '{{graph}}'.endsWith('_bandwidth') ? 'W' :
-                                   '{{graph}}'.indexOf('_latency_') > -1 || '{{graph}}'.endsWith('_elapsed') || '{{graph}}'.indexOf('ping') > -1 || group == 'ping' ? 'M' :
-                                   '{{graph}}'.endsWith('WH') || '{{graph}}'.endsWith('kwh') || '{{graph}}'.endsWith('_HEAT') || '{{graph}}'.endsWith('_YIELD') ? 'E' :
+                                   '{{graph}}'.indexOf('_latency_') > -1 || '{{graph}}'.endsWith('_elapsed') || '{{graph}}'.indexOf('ping') > -1 || group == 'ping' || '{{graph}}' == 'VD_DHW' || '{{graph}}' == 'VD_HEATING' || '{{graph}}' == 'VD_COOLING' ? 'M' :
+                                   '{{graph}}'.endsWith('WH') || '{{graph}}'.endsWith('kwh') || '{{graph}}'.endsWith('_HEAT') || '{{graph}}'.endsWith('_POWER') || '{{graph}}'.endsWith('_YIELD') ? 'E' :
                                    '{{graph}}'.endsWith('MODE') || '{{graph}}'.endsWith('OFF') || '{{graph}}'.endsWith('STATUS') || '{{graph}}'.endsWith('RESET') ? 'F' :
                                    '{{graph}}'.toUpperCase().indexOf('TEMPERATURE') > -1 || '{{graph}}'.indexOf('_TEMP_') > -1 || '{{graph}}'.endsWith('Temp') ? 'T' :
                                    '{{graph}}' == 'spot' ? 'C' :
@@ -97,6 +97,7 @@
              hx-on:htmx:before-on-load="
               let multiplier = this.id.endsWith('_kwh')       ? 1000 :
                                this.id.endsWith('_bandwidth') ? 8 :
+                               this.id.endsWith('VD_DHW') || this.id.endsWith('VD_HEATING') || this.id.endsWith('VD_COOLING') ? 3600 :
                                this.id.indexOf('_latency_') > -1 || this.id.endsWith('_elapsed') || this.id.indexOf('ping') > -1 || this.id.startsWith('ping:') ? 0.001
                                                               : 1;
               init(this.id,
@@ -137,7 +138,7 @@
       </div>
       <div hx-db="http:/stiebel/stiebel.db">
         <input type="hidden"
-               hx-sql="SELECT name AS graph, 'measurement' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%' AND name = upper(name) AND name NOT IN ('HEATING_CURVE_RISE_HC1', 'HEATING_CURVE_RISE_HC2', 'RESTART_ISG', 'VD_HEATING', 'VD_COOLING', 'NHZ_1', 'NHZ_2', 'NHZ_1_2', 'SG_READY_OPERATING_STATE', 'BUS_STATUS')"
+               hx-sql="SELECT name AS graph, 'measurement' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%' AND name = upper(name) AND name NOT IN ('HEATING_CURVE_RISE_HC1', 'HEATING_CURVE_RISE_HC2', 'RESTART_ISG', 'NHZ_1', 'NHZ_2', 'NHZ_1_2', 'SG_READY_OPERATING_STATE', 'BUS_STATUS', 'FAULT_STATUS', 'FLOW_TEMP_HYSTERESIS_AC','OPERATING_MODE','POWER_OFF','RESET','SET_FLOW_TEMPERATURE_AC','SET_ROOM_TEMPERATURE_AC','SET_TEMPERATURE_AREA')"
                hx-trigger="change"
                hx-target="closest div"
                mustache-array-template="graph" />

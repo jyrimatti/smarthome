@@ -216,13 +216,13 @@ And include in your HTML:
                             }
 
                             let dbURI = htmx.closest(elt, '[hx-db]').getAttribute('hx-db');
-                            let isHttp = dbURI.startsWith('http:');
+                            let isHttp = dbURI.startsWith('http');
 
                             const httpBackend = sqliteWasmHttp.createHttpBackend(httpBackendConfig);
                             var result = [];
                             sqliteWasmHttp.createSQLiteThread(isHttp ? { http: httpBackend } : {})
                                 .then(db => { db('open', {
-                                    filename: encodeURI(dbURI.startsWith('http://') ? dbURI : dbURI.replace(/^http:/, 'file:')),
+                                    filename: encodeURI(dbURI.startsWith('http://') || dbURI.startsWith('https://') ? dbURI : dbURI.replace(/^https?:/, 'file:')),
                                     vfs: isHttp ? 'http' : 'opfs'
                                 }); return db; } )
                                 .then(db => db('exec', {

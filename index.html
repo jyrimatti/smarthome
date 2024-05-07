@@ -60,7 +60,7 @@
               });
             }
             document.getElementById('chart').style.height = 'calc(100dvh / 2 * ' + allCharts.filter(x => x.value.trim() != '').length + ')';
-            allCharts.forEach((e,i) => {
+            allCharts.filter(x => x.value != '').forEach((e,i) => {
               let graphs = e.value.trim().split(',');
               if (graphs.length > 0) {
                 charts.push(initChart(root, graphs, dateFns, dateFnsTz, (seriesName, visible) => {

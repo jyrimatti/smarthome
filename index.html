@@ -54,21 +54,21 @@
             let charts = [];
             let root = mkRoot('chart');
             let allCharts = [...document.querySelectorAll('#charts *')];
-            if (!allCharts.find(x => x.value.trim() != '')) {
+            if (!allCharts.find(x => x.value != '')) {
               window.location.hash.split('#').forEach( (x,i) => {
                 document.getElementsByName('charts' + (i+1))[0].value = x;
               });
             }
-            document.getElementById('chart').style.height = 'calc(100dvh / 2 * ' + allCharts.filter(x => x.value.trim() != '').length + ')';
+            document.getElementById('chart').style.height = 'calc(100dvh / 2 * ' + allCharts.filter(x => x.value != '').length + ')';
             allCharts.filter(x => x.value != '').forEach((e,i) => {
               let graphs = e.value.trim().split(',');
               if (graphs.length > 0) {
                 charts.push(initChart(root, graphs, dateFns, dateFnsTz, (seriesName, visible) => {
                   document.getElementById(seriesName).dispatchEvent(new CustomEvent('change'));
                   if (visible) {
-                    e.value = e.value.split(',').filter(x => x.trim() != '').filter(x => x !== seriesName).concat([seriesName]).join(',');
+                    e.value = e.value.split(',').filter(x => x != '?').filter(x => x !== seriesName).concat([seriesName]).join(',');
                   } else {
-                    e.value = e.value.split(',').filter(x => x.trim() != '').filter(x => x !== seriesName).join(',');
+                    e.value = e.value.split(',').filter(x => x != '?').filter(x => x !== seriesName).join(',');
                   }
                   e.dispatchEvent(new CustomEvent('change'));
                 }));
@@ -89,7 +89,7 @@
             window.addChart = () => {
               let next = allCharts.find(x => x.value == '');
               if (next) {
-                next.value = ' ';
+                next.value = '?';
                 next.dispatchEvent(new CustomEvent('change'));
                 window.location.reload();
               }

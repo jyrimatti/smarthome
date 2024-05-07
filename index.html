@@ -31,7 +31,7 @@
         import('https://cdn.skypack.dev/date-fns-tz@2.0.0').then(dateFnsTz => {
           import('https://cdn.skypack.dev/duration-fns@3.0.2').then(durationFns => {
             //initQuery(dateFns, document.getElementById('query'));
-            initTooltips(document);
+            //initTooltips(document);
 
             window.adjustInterval = ([start,end]) => {
               document.getElementsByName('start').forEach(input => input.value = dateFns.format(durationFns.apply(new Date(), durationFns.parse(start)), "yyyy-MM-dd'T'hh:mm"));

@@ -154,28 +154,28 @@
     </template>
 
     <div id="graphLoader" hx-boost="true">
-      <div hx-db="http:/spot/spot.db">
+      <div hx-db="https://spot.lahteenmaki.net/spot.db">
         <input type="hidden"
                hx-sql="SELECT name AS graph, 'centsPerKWh' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
                hx-trigger="change"
                hx-target="closest div"
                mustache-array-template="graph" />
       </div>
-      <div hx-db="http:/speed/speed.db">
+      <div hx-db="http:/stiebel/speed.db">
         <input type="hidden"
                hx-sql="SELECT name AS graph, 'measurement' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
                hx-trigger="change"
                hx-target="closest div"
                mustache-array-template="graph" />
       </div>
-      <div hx-db="http:/ping/ping.db">
+      <div hx-db="http:/stiebel/ping.db">
         <input type="hidden"
                hx-sql="SELECT name AS graph, 'measurement' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
                hx-trigger="change"
                hx-target="closest div"
                mustache-array-template="graph" />
       </div>
-      <div hx-db="http:/ouman/ouman.db">
+      <div hx-db="http:/stiebel/ouman.db">
         <input type="hidden"
                hx-sql="SELECT name AS graph, 'measurement' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
                hx-trigger="change"
@@ -189,14 +189,14 @@
                hx-target="closest div"
                mustache-array-template="graph" />
       </div>
-      <div hx-db="http:/huawei/huawei.db">
+      <div hx-db="http:/stiebel/huawei.db">
         <input type="hidden"
                hx-sql="SELECT name AS graph, 'measurement' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
                hx-trigger="change"
                hx-target="closest div"
                mustache-array-template="graph" />
       </div>
-      <div hx-db="http:/homewizard/homewizard.db">
+      <div hx-db="http:/stiebel/homewizard.db">
         <input type="hidden"
                hx-sql="SELECT name AS graph, 'measurement' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
                hx-trigger="change"

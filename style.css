@@ -1,7 +1,6 @@
 body {
     margin: 0;
     padding-top: 10px;
-    overflow: hidden;
 }
 header {
     display: flex;
@@ -18,10 +17,6 @@ input {
 }
 input#query {
     width: 100%;
-}
-.container {
-    height: 80vh;
-    height: calc(99dvh - 32px);
 }
 .current {
     border: 1px dotted cadetblue;

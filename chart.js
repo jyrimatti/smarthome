@@ -1,5 +1,6 @@
-let mkRoot = () => {
-  let root = am5.Root.new("chart"); 
+let mkRoot = id => {
+  let root = am5.Root.new(id); 
+  root.container.set('layout', root.verticalLayout);
   root.setThemes([
     am5themes_Animated.new(root)
   ]);
@@ -70,11 +71,11 @@ let mkXAxis = (root, chart) => {
   return xAxis;
 };
 
-let mkSeriesConstructor = (dateFns, dateFnsTz, root, chart, xAxis, yAxis) => name => {
+let mkSeriesConstructor = (root, chart, xAxis, unit) => name => {
   let ret = am5xy.LineSeries.new(root, { 
     name:              name,
     xAxis:             xAxis,
-    yAxis:             yAxis,
+    yAxis:             mkYAxis(root, chart, unit),
     baseAxis:          xAxis,
     valueYField:       "measurement",
     valueXField:       "instant",
@@ -83,21 +84,13 @@ let mkSeriesConstructor = (dateFns, dateFnsTz, root, chart, xAxis, yAxis) => nam
     snapTooltip:       true,
     tooltip: am5.Tooltip.new(root, {
       labelText: "{name}\n{measurement}{yAxis.userData.unit} @ {instant.formatDate('yyyy-MM-dd HH:mm')}",
+      dy:        -50,
     }),
     userData:          { data: [] }
   });
   ret.get("tooltip").get("background").setAll({
     fillOpacity: 0.2
   });
-  /*ret.bullets.push(root => {
-    return am5.Bullet.new(root, {
-      sprite: am5.Circle.new(root, {
-        radius: 2,
-        fill: ret.get("fill"),
-        tooltipText: "{name}\n{measurement}\n{instant.formatDate('yyyy-MM-dd HH:mm')}"
-      }),
-    });
-  });*/
   ret.on('visible', visible => {
     if (visible) {
       ret.data.setAll(ret.get('userData').data);
@@ -228,10 +221,6 @@ let mkRangeInitializer = (dateFns, dateFnsTz, root, chart, xAxis, showWeekendsF,
   }
 };
 
-let initSeries = (dateFns, xAxis, series) => {
-    
-};
-
 let mkLegend = (root, chart) => {
   let legend = chart.children.push(am5.Legend.new(root, {
     layout: root.verticalLayout,
@@ -252,58 +241,19 @@ let mkLegend = (root, chart) => {
   return legend;
 }
 
-let initChart = (dateFns, dateFnsTz) => {
-  let root = mkRoot();
-  window.chart = mkChart(root);
-  let yAxisTemp = mkYAxis(root, chart, '°C');
-  let yAxisRelative = mkYAxis(root, chart, '%');
-  let yAxisFlag = mkYAxis(root, chart, '');
-  let yAxisPower = mkYAxis(root, chart, 'W');
-  let yAxisEnergy = mkYAxis(root, chart, 'Wh');
-  let yAxisPrice = mkYAxis(root, chart, 'c/kWh');
-  let yAxisBytes = mkYAxis(root, chart, 'B');
-  let yAxisPressure = mkYAxis(root, chart, 'bar');
-  let yAxisBandwidth = mkYAxis(root, chart, 'b/s');
-  let yAxisTime = mkYAxis(root, chart, 's');
-  let yAxisVoltage = mkYAxis(root, chart, 'V');
-  let yAxisCurrent = mkYAxis(root, chart, 'A');
-  let yAxisPPM = mkYAxis(root, chart, 'ppm');
-  let yAxisLPM = mkYAxis(root, chart, 'l/min');
+let initChart = (root, visibleSeries, dateFns, dateFnsTz, onVisible) => {
+  let chart = mkChart(root);
   let xAxis = mkXAxis(root, chart);
 
-  let mkSeriesTemp = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisTemp);
-  let mkSeriesFlag = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisFlag);
-  let mkSeriesRelative = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisRelative);
-  let mkSeriesPower = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisPower);
-  let mkSeriesEnergy = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisEnergy);
-  let mkSeriesPrice = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisPrice);
-  let mkSeriesBytes = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisBytes);
-  let mkSeriesPressure = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisPressure);
-  let mkSeriesBandwidth = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisBandwidth);
-  let mkSeriesTime = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisTime);
-  let mkSeriesVoltage = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisVoltage);
-  let mkSeriesCurrent = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisCurrent);
-  let mkSeriesPPM = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisPPM);
-  let mkSeriesLPM = mkSeriesConstructor(dateFns, dateFnsTz, root, chart, xAxis, yAxisLPM);
+  xAxis.on("start", function() {
+    syncAxes(root.container.children.values, chart);
+  });
+  xAxis.on("end", function() {
+    syncAxes(root.container.children.values, chart);
+  });
 
   let legend = mkLegend(root, chart);
   legend.data.setAll([]);
-
-  /*let showNightsButton = mkButton(root, legend, "Show/hide nights", '#0000ff');
-  let showWeekendsButton = mkButton(root, legend, "Show/hide weekends", '#000000');
-
-  let initRanges = mkRangeInitializer(dateFns, dateFnsTz, root, chart, xAxis, () => showWeekendsButton.get('active'), () => showNightsButton.get('active'));
-
-  showNightsButton.events.on("click", ev => {
-    ev.target.set('active', !ev.target.get('active'));
-    initRanges(mainSeries.data.values, true);
-  });
-
-  showWeekendsButton.events.on("click", ev => {
-    ev.target.set('active', !ev.target.get('active'));
-    initRanges(mainSeries.data.values, true);
-  });
-  */
 
   return (seriesName, type, data) => {
     var series = chart.series.values.find(x => x.get('name') === seriesName);
@@ -312,32 +262,38 @@ let initChart = (dateFns, dateFnsTz) => {
     }
 
     if (!series) {
-        series = type === 'T' ? mkSeriesTemp(seriesName) :
-                 type === 'R' ? mkSeriesRelative(seriesName) :
-                 type === 'F' ? mkSeriesFlag(seriesName) :
-                 type === 'P' ? mkSeriesPower(seriesName) :
-                 type === 'E' ? mkSeriesEnergy(seriesName) :
-                 type === 'C' ? mkSeriesPrice(seriesName) :
-                 type === 'B' ? mkSeriesBytes(seriesName) :
-                 type === 'b' ? mkSeriesPressure(seriesName) :
-                 type === 'W' ? mkSeriesBandwidth(seriesName) :
-                 type === 'M' ? mkSeriesTime(seriesName) :
-                 type === 'V' ? mkSeriesVoltage(seriesName) :
-                 type === 'A' ? mkSeriesCurrent(seriesName) :
-                 type === 'p' ? mkSeriesPPM(seriesName) :
-                 type === 'l' ? mkSeriesLPM(seriesName) :
-                 mkSeriesTemp(seriesName);
+        series = type === 'T' ? mkSeriesConstructor(root, chart, xAxis, '°C')(seriesName) :
+                 type === 'R' ? mkSeriesConstructor(root, chart, xAxis, '%')(seriesName) :
+                 type === 'F' ? mkSeriesConstructor(root, chart, xAxis, '')(seriesName) :
+                 type === 'P' ? mkSeriesConstructor(root, chart, xAxis, 'W')(seriesName) :
+                 type === 'E' ? mkSeriesConstructor(root, chart, xAxis, 'Wh')(seriesName) :
+                 type === 'C' ? mkSeriesConstructor(root, chart, xAxis, 'c/kWh')(seriesName) :
+                 type === 'B' ? mkSeriesConstructor(root, chart, xAxis, 'B')(seriesName) :
+                 type === 'b' ? mkSeriesConstructor(root, chart, xAxis, 'bar')(seriesName) :
+                 type === 'W' ? mkSeriesConstructor(root, chart, xAxis, 'b/s')(seriesName) :
+                 type === 'M' ? mkSeriesConstructor(root, chart, xAxis, 's')(seriesName) :
+                 type === 'V' ? mkSeriesConstructor(root, chart, xAxis, 'V')(seriesName) :
+                 type === 'A' ? mkSeriesConstructor(root, chart, xAxis, 'A')(seriesName) :
+                 type === 'p' ? mkSeriesConstructor(root, chart, xAxis, 'ppm')(seriesName) :
+                 type === 'l' ? mkSeriesConstructor(root, chart, xAxis, 'l/min')(seriesName) :
+                 undefined;
         if (type === '?') {
           console.log("Unknown type for " + seriesName);
         }
         let all = legend.data.values.concat([series]);
         all.sort((a,b) => a.get('name') < b.get('name') ? -1 : 1);
         legend.data.setAll(all);
-        series.hide();
-        initSeries(dateFns, xAxis, series);
+        if (!visibleSeries.includes(seriesName)) {
+          series.hide();
+        } else {
+          series.show();
+          series.get('yAxis').set('visible', true);
+          onVisible(seriesName, true);
+        }
 
         series.on('visible', visible => {
-          document.getElementById(seriesName).dispatchEvent(new CustomEvent('change'));
+          series.get('yAxis').set('visible', visible);
+          onVisible(seriesName, visible);
         });
     }
     if (data) {
@@ -346,3 +302,64 @@ let initChart = (dateFns, dateFnsTz) => {
     return false;
   };
 };
+
+let syncAxes = (chartsToSync, targetChart) => {
+  var targetAxis = targetChart.xAxes.getIndex(0);
+  if (targetAxis._skipSync != true) {
+    var start = targetAxis.get("start");
+    var end = targetAxis.get("end");
+    am5.array.each(chartsToSync, function(chart) {
+      if (chart != targetChart) {
+        var axis = chart.xAxes.getIndex(0);
+        axis._skipSync = true;
+        axis.setAll({
+          start: start,
+          end: end
+        })
+        axis._skipSync = false;
+      }
+    });
+  }
+}
+
+let parseType = (group, graph) =>
+  graph.startsWith('RELAT') || graph == 'wifi_strength' || graph == 'ah' || graph.endsWith('Fan') ?
+    'R' :
+  graph.endsWith('_W') || graph.endsWith('_w') || graph == 'TOTAL_ACTIVE_POWER' ?
+    'P' :
+  graph.endsWith('_PRESSURE') ?
+    'b' :
+  graph.endsWith('_bytes') ?
+    'B' :
+  graph.endsWith('_v') ?
+    'V' :
+  graph == 'co2' ?
+    'p' :
+  graph == 'FLOW_RATE' ?
+    'l' :
+  graph.endsWith('_a') ?
+    'A' :
+  graph.endsWith('_bandwidth') ?
+    'W' :
+  graph.indexOf('_latency_') > -1 || graph.endsWith('_elapsed') || graph.indexOf('ping') > -1 || group == 'ping' || graph == 'VD_DHW' || graph == 'VD_HEATING' || graph == 'VD_COOLING' ?
+    'M' :
+  graph.endsWith('WH') || graph.endsWith('kwh') || graph.endsWith('_HEAT') || graph.endsWith('_POWER') || graph.endsWith('_YIELD') ?
+    'E' :
+  graph.endsWith('MODE') || graph.endsWith('OFF') || graph.endsWith('STATUS') || graph.endsWith('RESET') ?
+    'F' :
+  graph.toUpperCase().indexOf('TEMPERATURE') > -1 || graph.indexOf('_TEMP_') > -1 || graph.endsWith('Temp') ?
+    'T' :
+  graph == 'spot' ?
+    'C' :
+    '?';
+
+let parseMultiplier = (group, graph) =>
+  graph.endsWith('_kwh') ?
+    1000 :
+  graph.endsWith('_bandwidth') ?
+    8 :
+  graph.endsWith('VD_DHW') || graph.endsWith('VD_HEATING') || graph.endsWith('VD_COOLING') ?
+    3600 :
+  graph.indexOf('_latency_') > -1 || graph.endsWith('_elapsed') || graph.indexOf('ping') > -1 || group == 'ping' ?
+    0.001 :
+    1;

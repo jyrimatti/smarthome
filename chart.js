@@ -276,6 +276,7 @@ let initChart = (root, visibleSeries, dateFns, dateFnsTz, onVisible) => {
                  type === 'A' ? mkSeriesConstructor(root, chart, xAxis, 'A')(seriesName) :
                  type === 'p' ? mkSeriesConstructor(root, chart, xAxis, 'ppm')(seriesName) :
                  type === 'l' ? mkSeriesConstructor(root, chart, xAxis, 'l/min')(seriesName) :
+                 type === 'd' ? mkSeriesConstructor(root, chart, xAxis, 'm')(seriesName) :
                  undefined;
         if (type === '?') {
           console.log("Unknown type for " + seriesName);
@@ -323,7 +324,7 @@ let syncAxes = (chartsToSync, targetChart) => {
 }
 
 let parseType = (group, graph) =>
-  graph.startsWith('RELAT') || graph == 'wifi_strength' || graph == 'ah' || graph.endsWith('Fan') ?
+  graph.startsWith('RELAT') || graph == 'wifi_strength' || graph == 'ah' || graph.endsWith('Fan') || graph == 'battery' ?
     'R' :
   graph.endsWith('_W') || graph.endsWith('_w') || graph == 'TOTAL_ACTIVE_POWER' ?
     'P' :
@@ -341,16 +342,18 @@ let parseType = (group, graph) =>
     'A' :
   graph.endsWith('_bandwidth') ?
     'W' :
-  graph.indexOf('_latency_') > -1 || graph.endsWith('_elapsed') || graph.indexOf('ping') > -1 || group == 'ping' || graph == 'VD_DHW' || graph == 'VD_HEATING' || graph == 'VD_COOLING' ?
+  graph.indexOf('_latency_') > -1 || graph.endsWith('_elapsed') || graph.indexOf('ping') > -1 || group == 'ping' || graph == 'VD_DHW' || graph == 'VD_HEATING' || graph == 'VD_COOLING' || graph.endsWith('Time') ?
     'M' :
   graph.endsWith('WH') || graph.endsWith('kwh') || graph.endsWith('_HEAT') || graph.endsWith('_POWER') || graph.endsWith('_YIELD') ?
     'E' :
-  graph.endsWith('MODE') || graph.endsWith('OFF') || graph.endsWith('STATUS') || graph.endsWith('RESET') ?
+  graph.endsWith('MODE') || graph.endsWith('OFF') || graph.endsWith('STATUS') || graph.endsWith('RESET') || graph == 'connected' || graph.indexOf('numberOf') > -1 ?
     'F' :
   graph.toUpperCase().indexOf('TEMPERATURE') > -1 || graph.indexOf('_TEMP_') > -1 || graph.endsWith('Temp') ?
     'T' :
   graph == 'spot' ?
     'C' :
+  graph.endsWith('Distance') ?
+    'd' :
     '?';
 
 let parseMultiplier = (group, graph) =>

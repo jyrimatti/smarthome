@@ -203,7 +203,7 @@
       </div>
       <div hx-db="http:/stiebel/automower.db">
         <input type="hidden"
-               hx-sql="SELECT name AS graph, 'measurement' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
+               hx-sql="SELECT name AS graph, 'measurement' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%' AND name NOT IN ('position')"
                hx-trigger="change"
                hx-target="closest div"
                mustache-array-template="graph" />

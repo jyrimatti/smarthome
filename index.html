@@ -201,6 +201,13 @@
                hx-target="closest div"
                mustache-array-template="graph" />
       </div>
+      <div hx-db="http:/stiebel/automower.db">
+        <input type="hidden"
+               hx-sql="SELECT name AS graph, 'measurement' AS column FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'"
+               hx-trigger="change"
+               hx-target="closest div"
+               mustache-array-template="graph" />
+      </div>
     </div>
 
     <header>

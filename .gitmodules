@@ -42,3 +42,7 @@
 [submodule "automower"]
 	path = automower
 	url = git@github.com:jyrimatti/automower.git
+[submodule "homekit.sh"]
+	path = homekit.sh
+	url = git@github.com:jyrimatti/homekit.sh.git
+
